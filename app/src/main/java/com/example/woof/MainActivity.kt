@@ -21,7 +21,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -52,7 +57,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -60,7 +64,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.example.woof.data.Dog
 import com.example.woof.data.dogs
 import com.example.woof.ui.theme.WoofTheme
-import kotlin.math.exp
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -146,28 +149,45 @@ class MainActivity : ComponentActivity() {
         modifier: Modifier = Modifier
     ) {
         var expanded by remember { mutableStateOf(false) }
-        Card(modifier = modifier) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(dimensionResource(R.dimen.padding_small))
-            ) {
-                DogIcon(dog.imageResourceId)
-                DogInformation(dog.name, dog.age)
-                Spacer(modifier = Modifier.weight(1f))
-                DogItemButton(expanded = expanded,
-                    onClick = { expanded = !expanded })
-            }
+        val color by animateColorAsState(
+            targetValue = if(expanded) MaterialTheme.colorScheme.tertiaryContainer
+            else MaterialTheme.colorScheme.primaryContainer, label = "ColorAnimation"
+        )
 
-            if (expanded) {
-                DogHobby(
-                    dogHobby = dog.hobbies,
+        Card(modifier = modifier) {
+            Column(
+                modifier = Modifier
+                    .animateContentSize(
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioNoBouncy,
+                            stiffness = Spring.StiffnessMedium
+                        )
+                    )
+                    .background(color)
+            ) {
+                Row(
                     modifier = Modifier
-                        .padding(start = dimensionResource(id = R.dimen.padding_medium),
-                            top = dimensionResource(id = R.dimen.padding_small),
-                            end = dimensionResource(id = R.dimen.padding_medium),
-                            bottom = dimensionResource(id = R.dimen.padding_medium))
-                )
+                        .fillMaxWidth()
+                        .padding(dimensionResource(R.dimen.padding_small))
+                ) {
+                    DogIcon(dog.imageResourceId)
+                    DogInformation(dog.name, dog.age)
+                    Spacer(modifier = Modifier.weight(1f))
+                    DogItemButton(expanded = expanded,
+                        onClick = { expanded = !expanded })
+                }
+                if (expanded) {
+                    DogHobby(
+                        dogHobby = dog.hobbies,
+                        modifier = Modifier
+                            .padding(
+                                start = dimensionResource(id = R.dimen.padding_medium),
+                                top = dimensionResource(id = R.dimen.padding_small),
+                                end = dimensionResource(id = R.dimen.padding_medium),
+                                bottom = dimensionResource(id = R.dimen.padding_medium)
+                            )
+                    )
+                }
             }
         }
     }
@@ -186,7 +206,7 @@ class MainActivity : ComponentActivity() {
             modifier = modifier
         ) {
             Icon(
-                imageVector = if(expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
                 contentDescription = stringResource(id = R.string.expand_button_content_description),
                 tint = MaterialTheme.colorScheme.secondary
             )
